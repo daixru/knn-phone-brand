@@ -1,10 +1,11 @@
 {
   "n_samples": 41,
-  "n_train": 30,
-  "n_test": 11,
+  "n_train": 32,
+  "n_test": 9,
+  "test_size": 0.2,
   "k_neighbors": 5,
-  "accuracy": 0.7272727272727273,
-  "f1_macro": 0.717948717948718,
+  "accuracy": 0.7777777777777778,
+  "f1_macro": 0.75,
   "labels": [
     "Android",
     "iPhone"
@@ -12,38 +13,251 @@
   "confusion_matrix": [
     [
       5,
-      1
+      0
     ],
     [
       2,
-      3
+      2
     ]
   ],
   "classification_report": {
     "Android": {
       "precision": 0.7142857142857143,
-      "recall": 0.8333333333333334,
-      "f1-score": 0.7692307692307693,
-      "support": 6.0
-    },
-    "iPhone": {
-      "precision": 0.75,
-      "recall": 0.6,
-      "f1-score": 0.6666666666666666,
+      "recall": 1.0,
+      "f1-score": 0.8333333333333334,
       "support": 5.0
     },
-    "accuracy": 0.7272727272727273,
+    "iPhone": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1-score": 0.6666666666666666,
+      "support": 4.0
+    },
+    "accuracy": 0.7777777777777778,
     "macro avg": {
-      "precision": 0.7321428571428572,
-      "recall": 0.7166666666666667,
-      "f1-score": 0.717948717948718,
-      "support": 11.0
+      "precision": 0.8571428571428572,
+      "recall": 0.75,
+      "f1-score": 0.75,
+      "support": 9.0
     },
     "weighted avg": {
-      "precision": 0.7305194805194805,
-      "recall": 0.7272727272727273,
-      "f1-score": 0.7226107226107227,
-      "support": 11.0
+      "precision": 0.8412698412698413,
+      "recall": 0.7777777777777778,
+      "f1-score": 0.7592592592592593,
+      "support": 9.0
     }
-  }
+  },
+  "question_influence": [
+    {
+      "key": "q20",
+      "label": "Ваша гарнитура от одного бренда или от разных?",
+      "association": 0.541628976167441,
+      "permutation_importance": 0.03414634146341457,
+      "permutation_std": 0.0202600582022392,
+      "relative": 1.0,
+      "knn_share": 0.05821205821205819,
+      "knn_relative": 0.49122807017543796
+    },
+    {
+      "key": "q12",
+      "label": "Насколько вам важна возможность настройки системы под себя?",
+      "association": 0.4001431128493511,
+      "permutation_importance": 0.06158536585365848,
+      "permutation_std": 0.02557343533598876,
+      "relative": 0.7387771527305613,
+      "knn_share": 0.10498960498960506,
+      "knn_relative": 0.8859649122807016
+    },
+    {
+      "key": "q4",
+      "label": "За что вы готовы переплатить, покупая смартфон?",
+      "association": 0.3435735378889252,
+      "permutation_importance": 0.02682926829268286,
+      "permutation_std": 0.0216785229690624,
+      "relative": 0.6343337469129637,
+      "knn_share": 0.0457380457380457,
+      "knn_relative": 0.38596491228070107
+    },
+    {
+      "key": "q9",
+      "label": "Насколько вам важна возможность кастомизации интерфейса?",
+      "association": 0.3400072431441138,
+      "permutation_importance": 0.06951219512195117,
+      "permutation_std": 0.030144407547093376,
+      "relative": 0.6277493599954719,
+      "knn_share": 0.1185031185031186,
+      "knn_relative": 1.0
+    },
+    {
+      "key": "q5",
+      "label": "Статус или технологичность?",
+      "association": 0.338432269867639,
+      "permutation_importance": 0.023170731707317017,
+      "permutation_std": 0.018047132423108198,
+      "relative": 0.6248415146884885,
+      "knn_share": 0.03950103950103947,
+      "knn_relative": 0.33333333333333276
+    },
+    {
+      "key": "q19",
+      "label": "Что бы вы выбрали: экономить и откладывать или порадовать себя?",
+      "association": 0.26998394943635523,
+      "permutation_importance": 0.0091463414634146,
+      "permutation_std": 0.011807876055510374,
+      "relative": 0.4984665911834294,
+      "knn_share": 0.01559251559251556,
+      "knn_relative": 0.13157894736842066
+    },
+    {
+      "key": "q13",
+      "label": "Как часто вы меняете телефон? (в годах)",
+      "association": 0.26608660741802964,
+      "permutation_importance": 0.03536585365853652,
+      "permutation_std": 0.018853201016756468,
+      "relative": 0.49127099753941295,
+      "knn_share": 0.060291060291060274,
+      "knn_relative": 0.5087719298245608
+    },
+    {
+      "key": "q18",
+      "label": "Сколько раз в день вы примерно заряжаете телефон?",
+      "association": 0.24697059108174024,
+      "permutation_importance": 0.031707317073170684,
+      "permutation_std": 0.029470843838035533,
+      "relative": 0.45597743464410023,
+      "knn_share": 0.05405405405405406,
+      "knn_relative": 0.4561403508771926
+    },
+    {
+      "key": "q11",
+      "label": "Как вы относитесь к перепродаже смартфона спустя 2–3 года?",
+      "association": 0.17132220315499397,
+      "permutation_importance": 0.014634146341463376,
+      "permutation_std": 0.017073170731707284,
+      "relative": 0.31630915385522296,
+      "knn_share": 0.02494802494802492,
+      "knn_relative": 0.21052631578947328
+    },
+    {
+      "key": "q17",
+      "label": "Вы ведёте Instagram?",
+      "association": 0.13998583481945925,
+      "permutation_importance": -0.005487804878048785,
+      "permutation_std": 0.010184934810054927,
+      "relative": 0.25845337118039186,
+      "knn_share": 0.0,
+      "knn_relative": 0.0
+    },
+    {
+      "key": "q10",
+      "label": "Можете ли вы поставить рингтон из файла?",
+      "association": 0.13865852370241508,
+      "permutation_importance": -0.011585365853658556,
+      "permutation_std": 0.015413688609468944,
+      "relative": 0.2560027801384646,
+      "knn_share": 0.0,
+      "knn_relative": 0.0
+    },
+    {
+      "key": "q21",
+      "label": "Как часто вы кушаете яблоки? (от 1 до 10)",
+      "association": 0.11641684839581026,
+      "permutation_importance": 0.027439024390243844,
+      "permutation_std": 0.02388968051726795,
+      "relative": 0.21493836836347685,
+      "knn_share": 0.04677754677754675,
+      "knn_relative": 0.3947368421052626
+    },
+    {
+      "key": "q7",
+      "label": "Сколько вам лет?",
+      "association": 0.07027823385713983,
+      "permutation_importance": 0.05731707317073165,
+      "permutation_std": 0.014985616740785999,
+      "relative": 0.12975346030123355,
+      "knn_share": 0.09771309771309776,
+      "knn_relative": 0.8245614035087716
+    },
+    {
+      "key": "q8",
+      "label": "Сколько в среднем вы готовы потратить на новый телефон? (₽)",
+      "association": 0.019022618168615703,
+      "permutation_importance": 0.06341463414634141,
+      "permutation_std": 0.03353104167040859,
+      "relative": 0.03512112351008154,
+      "knn_share": 0.10810810810810818,
+      "knn_relative": 0.9122807017543858
+    },
+    {
+      "key": "q15",
+      "label": "Ваша сфера деятельности",
+      "association": 0.0,
+      "permutation_importance": 0.042682926829268227,
+      "permutation_std": 0.018694767947263286,
+      "relative": 0.0,
+      "knn_share": 0.07276507276507277,
+      "knn_relative": 0.6140350877192977
+    },
+    {
+      "key": "q1",
+      "label": "Стабильность или новшество?",
+      "association": 0.0,
+      "permutation_importance": 0.031097560975609683,
+      "permutation_std": 0.01635010692413648,
+      "relative": 0.0,
+      "knn_share": 0.053014553014552976,
+      "knn_relative": 0.44736842105263086
+    },
+    {
+      "key": "q14",
+      "label": "Насколько важна актуальность и обслуживание старых версий ОС?",
+      "association": 0.0,
+      "permutation_importance": 0.02621951219512189,
+      "permutation_std": 0.018404132039983596,
+      "relative": 0.0,
+      "knn_share": 0.044698544698544666,
+      "knn_relative": 0.37719298245613975
+    },
+    {
+      "key": "q3",
+      "label": "Ведёте ли вы блог?",
+      "association": 0.0,
+      "permutation_importance": 0.023170731707317014,
+      "permutation_std": 0.017203336560568126,
+      "relative": 0.0,
+      "knn_share": 0.03950103950103946,
+      "knn_relative": 0.3333333333333327
+    },
+    {
+      "key": "q6",
+      "label": "VPN или «запрет»?",
+      "association": 0.0,
+      "permutation_importance": 0.00670731707317071,
+      "permutation_std": 0.012179868509413489,
+      "relative": 0.0,
+      "knn_share": 0.011434511434511416,
+      "knn_relative": 0.0964912280701752
+    },
+    {
+      "key": "q16",
+      "label": "Какого вы пола?",
+      "association": 0.0,
+      "permutation_importance": 0.0024390243902438933,
+      "permutation_std": 0.00731707317073168,
+      "relative": 0.0,
+      "knn_share": 0.004158004158004149,
+      "knn_relative": 0.03508771929824551
+    },
+    {
+      "key": "q2",
+      "label": "Часто ли вы фотографируете?",
+      "association": 0.0,
+      "permutation_importance": -0.004268292682926852,
+      "permutation_std": 0.01714922086637222,
+      "relative": 0.0,
+      "knn_share": 0.0,
+      "knn_relative": 0.0
+    }
+  ],
+  "question_influence_note": "association — сила связи ответа с классом (Cramér's V с поправкой на число вариантов для категорий, |корреляция| для чисел). permutation_importance — падение точности KNN при перемешивании вопроса."
 }

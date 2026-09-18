@@ -42,6 +42,8 @@ def _ensure_loaded() -> None:
 
 
 def get_metrics() -> dict[str, Any]:
+    if METRICS_PATH.exists():
+        return json.loads(METRICS_PATH.read_text(encoding="utf-8"))
     _ensure_loaded()
     return dict(_metrics or {})
 
@@ -123,7 +125,7 @@ def validate_answers(answers: dict[str, Any]) -> list[str]:
         if val is None or (isinstance(val, str) and not val.strip()):
             errors.append(f"Заполните поле: {field.label}")
             continue
-        if key in NUMERIC_CHOICE_KEYS or field.field_type == "number":
+        if field.key in NUMERIC_CHOICE_KEYS or field.field_type == "number":
             try:
                 num = float(val)
             except (TypeError, ValueError):

@@ -116,9 +116,10 @@
 
     {% if metrics %}
     <div class="card metrics-card">
-      <h3>Метрики модели (hold-out 25%)</h3>
+      <h3>Метрики модели (hold-out 20%)</h3>
       <dl class="metrics-dl">
         <div><dt>Выборка</dt><dd>{{ metrics.n_samples }} ответов</dd></div>
+        <div><dt>Обучение / тест</dt><dd>{{ metrics.n_train }} / {{ metrics.n_test }}</dd></div>
         <div><dt>Точность</dt><dd>{{ (metrics.accuracy * 100) | round(1) }}%</dd></div>
         <div><dt>F1 (macro)</dt><dd>{{ metrics.f1_macro | round(3) }}</dd></div>
         <div><dt>k соседей</dt><dd>{{ metrics.k_neighbors }}</dd></div>
@@ -127,9 +128,40 @@
     {% endif %}
   </aside>
 </div>
+
+{% if metrics.question_influence %}
+<section class="card influence-card">
+  <h3>Влияние вопросов на принадлежность</h3>
+  <p class="muted influence-note">
+    Сила связи ответа с классом iPhone / Android (Cramér's V с поправкой на число вариантов,
+    для чисел — |корреляция|). «Вклад KNN» — доля падения точности, если этот вопрос перемешать.
+  </p>
+  <ol class="influence-list">
+    {% for item in metrics.question_influence %}
+    <li>
+      <div class="influence-head">
+        <span class="influence-label">{{ item.label }}</span>
+        <span class="influence-stats">
+          <strong>{{ (item.association * 100) | round | int }}%</strong>
+          <small>KNN {{ (item.knn_share * 100) | round | int }}%</small>
+        </span>
+      </div>
+      <div class="influence-tracks" aria-hidden="true">
+        <div class="prob-track" title="Связь с классом">
+          <div class="prob-fill" style="width: {{ (item.relative * 100) | round(1) }}%"></div>
+        </div>
+        <div class="prob-track knn-track" title="Вклад в решение KNN">
+          <div class="prob-fill knn-fill" style="width: {{ (item.knn_relative * 100) | round(1) }}%"></div>
+        </div>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/app.js?v=7" defer></script>
+<script src="/static/app.js?v=8" defer></script>
 {% endblock %}

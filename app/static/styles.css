@@ -461,6 +461,60 @@ body {
   color: var(--muted);
 }
 
+.influence-card {
+  margin-top: 1.25rem;
+}
+
+.influence-note {
+  margin: 0.35rem 0 1rem;
+  font-size: 0.9rem;
+}
+
+.influence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.influence-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.influence-label {
+  font-size: 0.92rem;
+}
+
+.influence-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.influence-stats small {
+  color: var(--muted);
+}
+
+.influence-tracks {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.knn-track {
+  height: 5px;
+}
+
+.knn-fill {
+  background: var(--accent);
+}
+
 .alert {
   border-radius: 12px;
   padding: 0.85rem 1rem;
