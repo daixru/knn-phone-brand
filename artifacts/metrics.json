@@ -1,0 +1,49 @@
+{
+  "n_samples": 41,
+  "n_train": 30,
+  "n_test": 11,
+  "k_neighbors": 5,
+  "accuracy": 0.7272727272727273,
+  "f1_macro": 0.717948717948718,
+  "labels": [
+    "Android",
+    "iPhone"
+  ],
+  "confusion_matrix": [
+    [
+      5,
+      1
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "classification_report": {
+    "Android": {
+      "precision": 0.7142857142857143,
+      "recall": 0.8333333333333334,
+      "f1-score": 0.7692307692307693,
+      "support": 6.0
+    },
+    "iPhone": {
+      "precision": 0.75,
+      "recall": 0.6,
+      "f1-score": 0.6666666666666666,
+      "support": 5.0
+    },
+    "accuracy": 0.7272727272727273,
+    "macro avg": {
+      "precision": 0.7321428571428572,
+      "recall": 0.7166666666666667,
+      "f1-score": 0.717948717948718,
+      "support": 11.0
+    },
+    "weighted avg": {
+      "precision": 0.7305194805194805,
+      "recall": 0.7272727272727273,
+      "f1-score": 0.7226107226107227,
+      "support": 11.0
+    }
+  }
+}

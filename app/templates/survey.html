@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Опрос — python_k_next{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Какой смартфон вам ближе?</h1>
+  <p class="lead">
+    Ответьте на те же вопросы, что в обучающей выборке — модель k-ближайших соседей предскажет
+    <strong>iPhone</strong> или <strong>Android</strong> и покажет ближайших «соседей».
+  </p>
+</section>
+
+{% if model_error %}
+<div class="alert alert-error" role="alert">
+  <strong>Модель недоступна.</strong> {{ model_error }}
+</div>
+{% endif %}
+
+{% if not model_ready %}
+<div class="empty-state card" id="empty-state">
+  <div class="empty-icon" aria-hidden="true">◎</div>
+  <h2>Пока нечего предсказывать</h2>
+  <p>Обучите модель командой <code>python scripts/train_model.py</code>, затем обновите страницу.</p>
+</div>
+{% else %}
+
+<div class="layout-grid">
+  <form
+    id="survey-form"
+    class="card survey-card"
+    novalidate
+    autocomplete="off"
+    onsubmit="event.preventDefault(); return false;"
+  >
+    <div id="form-errors" class="alert alert-error hidden" role="alert"></div>
+
+    <ol class="question-list">
+      {% for q in questions %}
+      <li class="question-item" data-key="{{ q.key }}" data-field-type="{{ q.field_type }}">
+        <label class="question-label"{% if q.field_type in ('number', 'text') %} for="{{ q.key }}"{% endif %}>
+          <span class="q-num">{{ loop.index }}</span>
+          {{ q.label }}
+        </label>
+
+        {% if q.field_type == 'choice' %}
+        <div class="chip-group{% if q.options == ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10') %} chip-group-numeric{% endif %}" role="group" aria-label="{{ q.label }}">
+          {% for opt in q.options %}
+          <label class="chip">
+            <input type="radio" name="{{ q.key }}" value="{{ opt }}" autocomplete="off" />
+            <span>{{ opt }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% elif q.field_type == 'multi' %}
+        <div class="chip-group chip-group-multi" role="group" aria-label="{{ q.label }}">
+          {% for opt in q.options %}
+          <label class="chip">
+            <input type="checkbox" name="{{ q.key }}" value="{{ opt }}" autocomplete="off" />
+            <span>{{ opt }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% elif q.field_type == 'number' %}
+        <input
+          class="text-input"
+          type="number"
+          id="{{ q.key }}"
+          name="{{ q.key }}"
+          min="{{ q.min_value }}"
+          max="{{ q.max_value }}"
+          step="{{ q.step }}"
+          placeholder="{{ q.placeholder or '' }}"
+          inputmode="decimal"
+        />
+        {% else %}
+        <input
+          class="text-input"
+          type="text"
+          id="{{ q.key }}"
+          name="{{ q.key }}"
+          placeholder="{{ q.placeholder or '' }}"
+          autocomplete="off"
+        />
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="btn-reset">Сбросить</button>
+      <button type="button" class="btn btn-primary" id="btn-submit">
+        <span class="btn-label">Узнать результат</span>
+        <span class="btn-spinner hidden" aria-hidden="true"></span>
+      </button>
+    </div>
+  </form>
+
+  <aside class="result-panel">
+    <div id="result-placeholder" class="card result-placeholder">
+      <h2>Результат</h2>
+      <p class="muted">Заполните опрос и нажмите «Узнать результат».</p>
+      <div class="skeleton-lines" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div id="result-card" class="card result-card hidden" aria-live="polite">
+      <p class="result-kicker">Предсказание</p>
+      <h2 id="result-title" class="result-title">—</h2>
+      <p class="confidence-line">
+        Уверенность: <strong id="result-confidence">—</strong>
+      </p>
+      <div class="prob-bars" id="prob-bars"></div>
+      <h3 class="neighbors-title">Ближайшие соседи</h3>
+      <ul class="neighbors-list" id="neighbors-list"></ul>
+    </div>
+
+    {% if metrics %}
+    <div class="card metrics-card">
+      <h3>Метрики модели (hold-out 25%)</h3>
+      <dl class="metrics-dl">
+        <div><dt>Выборка</dt><dd>{{ metrics.n_samples }} ответов</dd></div>
+        <div><dt>Точность</dt><dd>{{ (metrics.accuracy * 100) | round(1) }}%</dd></div>
+        <div><dt>F1 (macro)</dt><dd>{{ metrics.f1_macro | round(3) }}</dd></div>
+        <div><dt>k соседей</dt><dd>{{ metrics.k_neighbors }}</dd></div>
+      </dl>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/app.js?v=7" defer></script>
+{% endblock %}

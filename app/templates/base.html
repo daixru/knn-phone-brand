@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}python_k_next{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css?v=7" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/">
+          <span class="brand-mark">K</span>
+          <span class="brand-text">
+            <strong>python_k_next</strong>
+            <small>iPhone vs Android</small>
+          </span>
+        </a>
+        {% if metrics and metrics.accuracy is defined %}
+        <div class="header-metrics" title="Метрики на отложенной выборке">
+          <span>Точность модели</span>
+          <strong>{{ (metrics.accuracy * 100) | round(1) }}%</strong>
+        </div>
+        {% endif %}
+      </div>
+    </header>
+    <main class="container main-content">{% block content %}{% endblock %}</main>
+    <footer class="site-footer container">
+      <p>K-ближайших соседей на ответах опроса · без регистрации и БД</p>
+    </footer>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
