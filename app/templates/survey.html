@@ -29,10 +29,10 @@
     class="card survey-card"
     novalidate
     autocomplete="off"
-    onsubmit="event.preventDefault(); return false;"
   >
     <div id="form-errors" class="alert alert-error hidden" role="alert"></div>
 
+    {# Один цикл строит все вопросы из app/schema.py вместо 21 копии HTML. #}
     <ol class="question-list">
       {% for q in questions %}
       <li class="question-item" data-key="{{ q.key }}" data-field-type="{{ q.field_type }}">
@@ -87,13 +87,14 @@
 
     <div class="form-actions">
       <button type="button" class="btn btn-ghost" id="btn-reset">Сбросить</button>
-      <button type="button" class="btn btn-primary" id="btn-submit">
+      <button type="submit" class="btn btn-primary" id="btn-submit">
         <span class="btn-label">Узнать результат</span>
         <span class="btn-spinner hidden" aria-hidden="true"></span>
       </button>
     </div>
   </form>
 
+  {# JS заполняет результат после запроса; метрики подставляет сервер при загрузке. #}
   <aside class="result-panel">
     <div id="result-placeholder" class="card result-placeholder">
       <h2>Результат</h2>
@@ -129,6 +130,7 @@
   </aside>
 </div>
 
+{# Эта оценка относится ко всей выборке, а не к текущему пользователю. #}
 {% if metrics.question_influence %}
 <section class="card influence-card">
   <h3>Влияние вопросов на принадлежность</h3>

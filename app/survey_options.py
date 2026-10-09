@@ -1,6 +1,7 @@
-"""Survey option sets shared by training and inference."""
+"""Варианты вопроса q4 одинаковы при обучении и при предсказании."""
 
-# Full set encoded in the trained model (includes legacy CSV value).
+# В старом CSV встречается «Мультивыбор». Сохраняем его как отдельный признак,
+# чтобы не потерять данные и совместимость с уже обученной моделью.
 MULTI_OPTIONS_FULL: tuple[str, ...] = (
     "Статус",
     "Камера",
@@ -9,5 +10,8 @@ MULTI_OPTIONS_FULL: tuple[str, ...] = (
     "Мультивыбор",
 )
 
-# Shown in the UI — multi is implied by checkbox controls, not a separate answer.
+# В форме показываем только реальные причины покупки. Можно отметить несколько.
 MULTI_OPTIONS_UI: tuple[str, ...] = MULTI_OPTIONS_FULL[:-1]
+
+# q4 превращается в пять столбцов: выбранный вариант = 1, остальные = 0.
+MULTI_KEYS = tuple(f"q4_{index}" for index in range(len(MULTI_OPTIONS_FULL)))

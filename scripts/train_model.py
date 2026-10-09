@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train KNN classifier on survey data and persist model + metrics."""
+"""Обучение: CSV → признаки → разделение данных → KNN → метрики и файлы."""
 
 from __future__ import annotations
 
@@ -25,18 +25,18 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 ROOT = Path(__file__).resolve().parents[1]
+# Позволяет запускать файл командой python scripts/train_model.py.
 sys.path.insert(0, str(ROOT))
 
-from app.schema import QUESTION_FIELDS
-from app.survey_options import MULTI_OPTIONS_FULL
+from app.schema import CATEGORY_KEYS, NUMERIC_KEYS, QUESTION_FIELDS, TEXT_KEYS
+from app.survey_options import MULTI_KEYS, MULTI_OPTIONS_FULL
 
 DATA_PATH = ROOT / "data" / "iphone-android-survey.csv"
 ARTIFACT_DIR = ROOT / "artifacts"
 
-MULTI_OPTIONS = MULTI_OPTIONS_FULL
-MULTI_KEYS = [f"q4_{i}" for i in range(len(MULTI_OPTIONS))]
-NUMERIC_KEYS = frozenset({"q7", "q8", "q9", "q13", "q18", "q21"})
 TEST_SIZE = 0.2
+K_NEIGHBORS = 5
+RANDOM_STATE = 42
 
 TARGET_MAP = {
     "айфон": "iPhone",
@@ -47,17 +47,19 @@ TARGET_MAP = {
 
 
 def normalize_target(value: str) -> str:
+    """Приводим русское и английское написание к двум названиям классов."""
     key = str(value).strip().lower()
     if key in TARGET_MAP:
         return TARGET_MAP[key]
-    raise ValueError(f"Unknown target label: {value!r}")
+    raise ValueError(f"Неизвестный класс телефона: {value!r}")
 
 
 def parse_price(raw: str) -> float:
+    """Распознаём цены вроде 70 000 и 100.000; ошибочные значения станут пропусками."""
     s = str(raw).strip().replace(" ", "").replace("\u00a0", "")
     if not s:
         return np.nan
-    # European-style thousands: 100.000 -> 100000
+    # Точки между группами из трёх цифр считаем разделителями тысяч.
     if re.fullmatch(r"\d{1,3}(\.\d{3})+", s):
         s = s.replace(".", "")
     s = s.replace(",", ".")
@@ -68,6 +70,7 @@ def parse_price(raw: str) -> float:
 
 
 def parse_float(raw: str) -> float:
+    """Читаем число с точкой или запятой; пропуски позже заполнит SimpleImputer."""
     s = str(raw).strip().replace(",", ".")
     if not s:
         return np.nan
@@ -78,29 +81,32 @@ def parse_float(raw: str) -> float:
 
 
 def multi_vector(raw: str) -> list[int]:
+    """Например, «Статус;Камера» → [1, 1, 0, 0, 0]."""
     parts = {p.strip() for p in str(raw).split(";") if p.strip()}
-    return [1 if opt in parts else 0 for opt in MULTI_OPTIONS]
+    return [1 if opt in parts else 0 for opt in MULTI_OPTIONS_FULL]
 
 
-def load_frame() -> pd.DataFrame:
+def load_frame() -> tuple[pd.DataFrame, np.ndarray]:
+    """X — ответы (признаки), y — известный телефон каждого участника."""
     df = pd.read_csv(DATA_PATH)
+    # Первый столбец — время, последний — телефон. Они не входят в признаки.
     feature_cols = list(df.columns[1:-1])
+    if len(feature_cols) != len(QUESTION_FIELDS):
+        raise ValueError("Количество вопросов в CSV не совпадает с app/schema.py")
     rows: list[dict[str, object]] = []
     targets: list[str] = []
 
     for _, row in df.iterrows():
         targets.append(normalize_target(row.iloc[-1]))
         record: dict[str, object] = {}
-        for idx, col in enumerate(feature_cols):
-            key = f"q{idx + 1}"
+        for field, col in zip(QUESTION_FIELDS, feature_cols):
+            key = field.key
             val = row[col]
             if key == "q4":
                 for i, bit in enumerate(multi_vector(val)):
                     record[f"q4_{i}"] = bit
-            elif key in ("q7", "q8", "q13", "q18"):
+            elif key in NUMERIC_KEYS:
                 record[key] = parse_price(val) if key == "q8" else parse_float(val)
-            elif key in ("q9", "q21"):
-                record[key] = parse_float(val)
             else:
                 record[key] = str(val).strip() if pd.notna(val) else ""
         rows.append(record)
@@ -110,74 +116,45 @@ def load_frame() -> pd.DataFrame:
     return X, y
 
 
-def build_pipeline(X: pd.DataFrame) -> Pipeline:
-    cat_cols = ["q1", "q2", "q3", "q5", "q6", "q10", "q11", "q12", "q14", "q16", "q17", "q19", "q20"]
-    num_cols = ["q7", "q8", "q9", "q13", "q18", "q21"]
-    multi_cols = MULTI_KEYS
-    text_cols = ["q15"]
-
-    transformers = []
-    if cat_cols:
-        transformers.append(
-            (
-                "cat",
-                Pipeline(
-                    [
-                        ("impute", SimpleImputer(strategy="most_frequent")),
-                        (
-                            "onehot",
-                            OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-                        ),
-                    ]
-                ),
-                cat_cols,
-            )
-        )
-    if text_cols:
-        transformers.append(
-            (
-                "text",
-                Pipeline(
-                    [
-                        ("impute", SimpleImputer(strategy="constant", fill_value="")),
-                        (
-                            "onehot",
-                            OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-                        ),
-                    ]
-                ),
-                text_cols,
-            )
-        )
-    if num_cols:
-        transformers.append(
-            (
-                "num",
-                Pipeline(
-                    [
-                        ("impute", SimpleImputer(strategy="median")),
-                        ("scale", StandardScaler()),
-                    ]
-                ),
-                num_cols,
-            )
-        )
-    if multi_cols:
-        transformers.append(
-            (
-                "multi",
-                Pipeline([("impute", SimpleImputer(strategy="constant", fill_value=0))]),
-                multi_cols,
-            )
-        )
-
-    preprocessor = ColumnTransformer(transformers=transformers)
-
-    clf = KNeighborsClassifier(n_neighbors=5, weights="distance", metric="minkowski", p=2)
-    return Pipeline([("preprocess", preprocessor), ("model", clf)])
+def build_pipeline() -> Pipeline:
+    """Pipeline выполняет одну и ту же подготовку при обучении и предсказании."""
+    # Категории нельзя кодировать числами 1, 2, 3: это создало бы ложный порядок.
+    # One-hot создаёт отдельный столбец 0/1 для каждого варианта ответа.
+    categories = Pipeline([
+        ("impute", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+    # Сфера деятельности тоже кодируется как категория, а не анализируется как текст.
+    # Новый вариант не вызывает ошибку: handle_unknown="ignore" даёт нули.
+    text = Pipeline([
+        ("impute", SimpleImputer(strategy="constant", fill_value="")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+    # Пропуски заменяем медианой. Масштабирование не даёт цене в рублях
+    # перекрыть возраст и оценки 1–10 при вычислении расстояния.
+    numbers = Pipeline([
+        ("impute", SimpleImputer(strategy="median")),
+        ("scale", StandardScaler()),
+    ])
+    multiple_choice = Pipeline([
+        ("impute", SimpleImputer(strategy="constant", fill_value=0)),
+    ])
+    # Порядок групп оставляем прежним для воспроизводимости расстояний.
+    preprocessor = ColumnTransformer([
+        ("cat", categories, list(CATEGORY_KEYS)),
+        ("text", text, list(TEXT_KEYS)),
+        ("num", numbers, list(NUMERIC_KEYS)),
+        ("multi", multiple_choice, list(MULTI_KEYS)),
+    ])
+    # p=2 — обычное евклидово расстояние. Близкие соседи голосуют сильнее дальних.
+    model = KNeighborsClassifier(
+        n_neighbors=K_NEIGHBORS, weights="distance", metric="minkowski", p=2
+    )
+    return Pipeline([("preprocess", preprocessor), ("model", model)])
 
 
 def _question_groups(X: pd.DataFrame) -> dict[str, list[str]]:
+    # Все пять столбцов q4 перемешиваем вместе, как один ответ.
     groups: dict[str, list[str]] = {}
     for field in QUESTION_FIELDS:
         if field.key == "q4":
@@ -188,7 +165,11 @@ def _question_groups(X: pd.DataFrame) -> dict[str, list[str]]:
 
 
 def _cramers_v(feature: pd.Series, target: np.ndarray) -> float:
-    """Bias-corrected Cramér's V so high-cardinality fields are not inflated."""
+    """Связь категории с телефоном (0…1), с поправкой на число вариантов.
+
+    Сравниваем реальные частоты с ожидаемыми при отсутствии связи.
+    Поправка уменьшает завышение оценки у вопросов с множеством вариантов.
+    """
     table = pd.crosstab(feature.astype(str).fillna(""), pd.Series(target))
     observed = table.to_numpy(dtype=float)
     n = observed.sum()
@@ -209,6 +190,7 @@ def _cramers_v(feature: pd.Series, target: np.ndarray) -> float:
 
 
 def _numeric_association(feature: pd.Series, target: np.ndarray) -> float:
+    """Модуль корреляции числа с классом: iPhone = 1, Android = 0."""
     y_bin = pd.Series((np.asarray(target) == "iPhone").astype(float), index=feature.index)
     r = pd.to_numeric(feature, errors="coerce").corr(y_bin)
     if r is None or not np.isfinite(r):
@@ -234,8 +216,13 @@ def _grouped_permutation_importance(
     y: np.ndarray,
     groups: dict[str, list[str]],
     n_repeats: int = 40,
-    random_state: int = 42,
+    random_state: int = RANDOM_STATE,
 ) -> tuple[float, dict[str, dict[str, float]]]:
+    """Перемешиваем ответы на один вопрос и измеряем падение точности.
+
+    Повторяем 40 раз: mean — среднее падение, std — разброс результатов.
+    Отрицательное падение возможно: после перемешивания точность выросла.
+    """
     rng = np.random.default_rng(random_state)
     baseline = float(accuracy_score(y, pipeline.predict(X)))
     originals = {col: X[col].to_numpy(copy=True) for col in X.columns}
@@ -243,17 +230,18 @@ def _grouped_permutation_importance(
     for key, cols in groups.items():
         drops: list[float] = []
         for _ in range(n_repeats):
-            Xp = X.copy()
-            perm = rng.permutation(len(X))
+            shuffled_answers = X.copy()
+            shuffled_indices = rng.permutation(len(X))
             for col in cols:
-                Xp[col] = originals[col][perm]
-            acc = float(accuracy_score(y, pipeline.predict(Xp)))
+                shuffled_answers[col] = originals[col][shuffled_indices]
+            acc = float(accuracy_score(y, pipeline.predict(shuffled_answers)))
             drops.append(baseline - acc)
         out[key] = {"mean": float(np.mean(drops)), "std": float(np.std(drops))}
     return baseline, out
 
 
 def question_influence(pipeline: Pipeline, X: pd.DataFrame, y: np.ndarray) -> list[dict[str, object]]:
+    """Две разные оценки: связь с классом и влияние на точность KNN."""
     groups = _question_groups(X)
     _, perm = _grouped_permutation_importance(pipeline, X, y, groups)
     labels = {field.key: field.label for field in QUESTION_FIELDS}
@@ -272,6 +260,8 @@ def question_influence(pipeline: Pipeline, X: pd.DataFrame, y: np.ndarray) -> li
             }
         )
 
+    # Для полос на странице нормируем оценки. Отрицательное падение точности
+    # сохраняем в метриках, но для долей и ширины полос считаем равным нулю.
     max_assoc = max((float(r["association"]) for r in rows), default=0.0)
     perm_clipped = [max(float(r["permutation_importance"]), 0.0) for r in rows]
     perm_sum = float(sum(perm_clipped))
@@ -290,20 +280,26 @@ def question_influence(pipeline: Pipeline, X: pd.DataFrame, y: np.ndarray) -> li
 
 
 def main() -> int:
+    # 1. Читаем исходные ответы и известные классы телефонов.
     X, y = load_frame()
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
+    # 2. 80% для обучения, 20% для проверки. stratify сохраняет доли классов.
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=42, stratify=y
+        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
 
-    pipeline = build_pipeline(X)
+    # 3. Подготовка признаков обучается только на тренировочных данных.
+    pipeline = build_pipeline()
     pipeline.fit(X_train, y_train)
 
+    # 4. Проверяем модель на ответах, которые она не видела при обучении.
     y_pred = pipeline.predict(X_test)
     labels = sorted(set(y))
     cm = confusion_matrix(y_test, y_pred, labels=labels)
     report = classification_report(y_test, y_pred, labels=labels, output_dict=True)
+    # Влияние, как и прежде, считаем по всей выборке. Это описательная оценка,
+    # а не независимая проверка: часть этих ответов модель уже видела.
     influence = question_influence(pipeline, X, y)
 
     metrics = {
@@ -311,7 +307,7 @@ def main() -> int:
         "n_train": int(len(y_train)),
         "n_test": int(len(y_test)),
         "test_size": TEST_SIZE,
-        "k_neighbors": 5,
+        "k_neighbors": K_NEIGHBORS,
         "accuracy": float(accuracy_score(y_test, y_pred)),
         "f1_macro": float(f1_score(y_test, y_pred, average="macro")),
         "labels": labels,
@@ -325,6 +321,7 @@ def main() -> int:
         ),
     }
 
+    # 5. Сохраняем подготовку и модель вместе: сайт ничего не обучает заново.
     joblib.dump(pipeline, ARTIFACT_DIR / "knn_pipeline.joblib")
     (ARTIFACT_DIR / "metrics.json").write_text(
         json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8"

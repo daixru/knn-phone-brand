@@ -1,3 +1,4 @@
+/* Общие цвета, размеры и шрифт: внешний вид меняется здесь. */
 :root {
   --bg: #0b0f14;
   --bg-elevated: #121922;
@@ -42,6 +43,7 @@ body {
   margin-inline: auto;
 }
 
+/* Шапка сайта и название проекта. */
 .site-header {
   padding: 1.25rem 0 0.5rem;
   border-bottom: 1px solid var(--border);
@@ -117,6 +119,7 @@ body {
   max-width: 62ch;
 }
 
+/* Форма и результат: две колонки на широком экране, одна на узком. */
 .layout-grid {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
@@ -143,6 +146,7 @@ body {
   padding-bottom: 1.5rem;
 }
 
+/* Вопросы и варианты ответов (radio — один, checkbox — несколько). */
 .question-list {
   list-style: none;
   margin: 0;
@@ -288,6 +292,7 @@ body {
   font-weight: 500;
 }
 
+/* Кнопки и индикатор ожидания ответа сервера. */
 .form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -341,6 +346,7 @@ body {
   }
 }
 
+/* Предсказание, вероятности и список ближайших соседей. */
 .result-panel {
   display: flex;
   flex-direction: column;
@@ -461,6 +467,7 @@ body {
   color: var(--muted);
 }
 
+/* Полосы связи вопросов с классом и вклада в точность KNN. */
 .influence-card {
   margin-top: 1.25rem;
 }
@@ -515,6 +522,7 @@ body {
   background: var(--accent);
 }
 
+/* Ошибки, пустое состояние и скрытие блоков через класс hidden. */
 .alert {
   border-radius: 12px;
   padding: 0.85rem 1rem;

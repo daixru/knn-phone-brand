@@ -1,4 +1,4 @@
-"""Questionnaire field definitions derived from the survey CSV."""
+"""Описание 21 вопроса: по нему строятся форма, проверка и признаки модели."""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ RATING_1_10: tuple[str, ...] = tuple(str(i) for i in range(1, 11))
 
 @dataclass(frozen=True)
 class QuestionField:
+    """Один вопрос: имя в API, подпись, вид ввода и допустимые границы."""
+
     key: str
     label: str
     field_type: FieldType
@@ -24,7 +26,8 @@ class QuestionField:
     placeholder: str | None = None
 
 
-# Column keys match persisted model feature order (see scripts/train_model.py).
+# q1…q21 соответствуют порядку вопросов в CSV. Имена нужны и форме, и модели.
+# Их нельзя менять без повторного обучения: сохранённая модель знает эти имена.
 QUESTION_FIELDS: tuple[QuestionField, ...] = (
     QuestionField(
         key="q1",
@@ -166,4 +169,14 @@ QUESTION_FIELDS: tuple[QuestionField, ...] = (
     ),
 )
 
-FIELD_BY_KEY = {f.key: f for f in QUESTION_FIELDS}
+# Оценки 1–10 выглядят в форме как варианты, но для модели являются числами.
+NUMERIC_CHOICE_KEYS = frozenset({"q9", "q21"})
+NUMERIC_KEYS = tuple(
+    field.key for field in QUESTION_FIELDS
+    if field.field_type == "number" or field.key in NUMERIC_CHOICE_KEYS
+)
+CATEGORY_KEYS = tuple(
+    field.key for field in QUESTION_FIELDS
+    if field.field_type == "choice" and field.key not in NUMERIC_CHOICE_KEYS
+)
+TEXT_KEYS = tuple(field.key for field in QUESTION_FIELDS if field.field_type == "text")

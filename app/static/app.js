@@ -1,3 +1,5 @@
+// Браузер собирает ответы и показывает результат. Сам KNN работает на сервере.
+// Обёртка оставляет переменные внутри этого файла, не добавляя их в window.
 (function () {
   const form = document.getElementById("survey-form");
   if (!form) return;
@@ -9,25 +11,15 @@
   const resultCard = document.getElementById("result-card");
 
   function collectAnswers() {
+    // Все поля имеют name=q1…q21, поэтому можно читать стандартный FormData.
+    // У флажков бывает несколько значений, у остальных полей — только одно.
+    const formData = new FormData(form);
     const answers = {};
     form.querySelectorAll(".question-item").forEach((item) => {
       const key = item.dataset.key;
-      const radios = item.querySelectorAll(`input[type="radio"][name="${key}"]`);
-      const checkboxes = item.querySelectorAll(`input[type="checkbox"][name="${key}"]`);
-      const single = item.querySelector(
-        `input[name="${key}"]:not([type="radio"]):not([type="checkbox"])`
-      );
-
-      if (checkboxes.length) {
-        answers[key] = Array.from(checkboxes)
-          .filter((el) => el.checked)
-          .map((el) => el.value);
-      } else if (radios.length) {
-        const checked = Array.from(radios).find((el) => el.checked);
-        answers[key] = checked ? checked.value : "";
-      } else if (single) {
-        answers[key] = single.value;
-      }
+      answers[key] = item.dataset.fieldType === "multi"
+        ? formData.getAll(key)
+        : formData.get(key) ?? "";
     });
     return answers;
   }
@@ -55,6 +47,7 @@
     formErrors.innerHTML = "";
   }
 
+  // Текст ответа вставляем в HTML как текст, а не как исполняемую разметку.
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -71,6 +64,7 @@
     if (label) label.textContent = loading ? "Считаем…" : "Узнать результат";
   }
 
+  // Класс, доли голосов и расстояния приходят готовыми из /api/predict.
   function renderResult(data) {
     if (!resultPlaceholder || !resultCard) return;
 
@@ -103,11 +97,9 @@
       list.innerHTML = "";
       (data.neighbors || []).forEach((n, i) => {
         const li = document.createElement("li");
-        const labelRu =
-          n.label === "iPhone" ? "iPhone" : n.label === "Android" ? "Android" : n.label;
         const dist = Number(n.distance);
         const distText = Number.isFinite(dist) ? dist.toFixed(2) : "—";
-        li.innerHTML = `<span>#${i + 1} · ${escapeHtml(labelRu)}</span><span>${distText}</span>`;
+        li.innerHTML = `<span>#${i + 1} · ${escapeHtml(n.label)}</span><span>${distText}</span>`;
         list.appendChild(li);
       });
     }
@@ -115,6 +107,8 @@
     resultCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
+  // На время запроса блокируем кнопку. finally вернёт её в обычное состояние
+  // при любом исходе: успешном ответе, ошибке сервера или отсутствии связи.
   async function submitSurvey() {
     clearErrors();
     const answers = collectAnswers();
@@ -156,5 +150,4 @@
     resultPlaceholder?.classList.remove("hidden");
   });
 
-  btnSubmit?.addEventListener("click", () => submitSurvey());
 })();
